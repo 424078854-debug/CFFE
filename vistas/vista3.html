@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista de Saldo CFE (Versión Final)</title>
+    <style>
+        /* Paleta de colores TealGrn (de más claro a más oscuro/azulado):
+           #a8e6cf (Verde claro)
+           #7dd6c1 (Verde medio)
+           #2d7f8d (Verde oscuro/Teal)
+           #236471 (Azul Teal más oscuro)
+        */
+
+        /* Estilos generales */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* Degradado de fondo para el body */
+            background: linear-gradient(to bottom right, #a8e6cf, #7dd6c1);
+            min-height: 100vh; /* Asegura que el degradado cubra toda la altura */
+            color: #333; /* Color de texto base */
+        }
+
+        /* Contenedor principal (100% de la pantalla) */
+        .app-container {
+            width: 100%;
+            height: 100vh; 
+            background-color: transparent; 
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative; 
+        }
+
+        /* Contenido principal de la app */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; 
+            background-color: transparent; 
+        }
+
+        /* Oculta todas las páginas por defecto */
+        .app-page {
+            display: none;
+            flex-grow: 1;
+            padding: 20px;
+            flex-direction: column;
+            max-width: 900px;  
+            margin: 0 auto;  
+            width: 100%;     
+            box-sizing: border-box; 
+            background-color: #ffffff; /* Las páginas en sí son blancas */
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            margin-top: 20px; 
+            margin-bottom: 20px; 
+            overflow-x: hidden; 
+        }
+        
+        /* Muestra solo la página activa */
+        .app-page.active-page {
+            display: flex; 
+        }
+
+        /* === AUMENTO DE FUENTE EN TODO EL CSS === */
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0; 
+            margin: 0 0 25px 0; 
+            background: linear-gradient(to right, #2d7f8d, #236471);
+            color: white; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .header h1 { 
+            font-size: 36px; /* Era 32px */
+            font-weight: bold; 
+            color: white; 
+            margin: 0; 
+        } 
+        .menu-icon { 
+            font-size: 30px; /* Era 28px */
+            font-weight: bold; 
+            color: #236471; 
+            background-color: #a8e6cf; 
+            width: 44px; height: 44px; border-radius: 50%; /* Ligeramente más grande */
+            display: flex; justify-content: center; align-items: center; 
+            cursor: pointer; 
+        } 
+        .menu-icon span { background: #236471; } 
+        .menu-icon span::before, .menu-icon span::after { background: #236471; }
+        
+        .service-selector { 
+            border: 1px solid #ddd; border-radius: 8px; 
+            padding: 15px; font-size: 20px; /* Era 18px */
+            color: #333; 
+            background-color: #ffffff; 
+            display: flex; justify-content: space-between; align-items: center; 
+            cursor: pointer; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        } 
+        .service-selector span { font-size: 18px; color: #888; } /* Era 16px */
+        .bill-details { margin-top: 25px; font-size: 19px; line-height: 1.6; color: #555; } /* Era 17px */
+        .bill-details p { margin: 5px 0; }
+        .bill-details strong { color: #333; font-weight: 600; }
+        .status-paid { color: #2d7f8d; font-weight: bold; } 
+        
+        /* Contenedor blanco para la sección de saldo */
+        .saldo-container {
+            background-color: #ffffff; 
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .saldo-section { text-align: center; margin-top: 0; }
+        .saldo-section .label { font-size: 22px; color: #777; } /* Era 20px */
+        
+        .saldo-section .amount {
+            font-size: 80px; /* Era 72px */
+            font-weight: bold;
+            color: #236471; 
+            margin: 10px 0 5px 0;
+        }
+        
+        .saldo-section .consumption-info {
+            font-size: 18px; /* Era 16px */
+            color: #555; 
+        }
+        
+        .consumption-info strong.low { color: #2d7f8d; } 
+        .consumption-info strong.high { color: #d9534f; } 
+
+        .consumption-bar-container { width: 100%; height: 10px; background-color: #eee; border-radius: 5px; margin-top: 25px; position: relative; }
+        
+        .consumption-bar { 
+            height: 100%; width: 100%; 
+            background: linear-gradient(to right, #79d150, #f9eb3c, #f39c12, #e74c3c); 
+            border-radius: 5px; 
+        }
+        
+        .consumption-marker {
+            position: absolute;
+            right: 85%; /* En la zona verde */
+            top: -3px;
+            width: 4px;
+            height: 16px;
+            background-color: #79d150; /* Verde brillante */
+            border: 2px solid white;
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .pay-button { 
+            display: block; width: 100%; 
+            background: linear-gradient(to right, #2d7f8d, #236471); 
+            color: white; font-size: 22px; /* Era 20px */
+            font-weight: 600; 
+            text-align: center; padding: 18px 0; border: none; 
+            border-radius: 30px; cursor: pointer; margin-top: 30px; 
+            text-decoration: none; 
+            box-shadow: 0 4px 10px rgba(45, 127, 141, 0.3); 
+        }
+        .simulate-link { 
+            display: flex; justify-content: center; align-items: center; gap: 8px; 
+            margin-top: 25px; font-size: 20px; /* Era 18px */
+            font-weight: 600; 
+            color: #2d7f8d; 
+            text-decoration: none; cursor: pointer; 
+        }
+        .simulate-link .icon { font-size: 26px; } /* Era 24px */
+        
+        .placeholder-content { text-align: center; color: #999; margin-top: 50px; }
+        .placeholder-content .icon { font-size: 60px; margin-bottom: 20px; }
+        
+        .back-link { 
+            font-size: 20px; /* Era 18px */
+            font-weight: 600; 
+            color: #2d7f8d; 
+            text-decoration: none; 
+            cursor: pointer; 
+            margin-bottom: 20px; 
+            display: inline-block; 
+        }
+
+        .simulator-placeholder { width: 100%; text-align: center; }
+        .simulator-placeholder .icon { font-size: 80px; color: #7dd6c1; margin: 20px 0; } 
+        .simulator-placeholder .slider { width: 80%; height: 5px; background: #ddd; border-radius: 5px; margin: 20px auto; }
+        
+        /* === CAMBIO DE FOOTER SOLICITADO === */
+        .footer-nav { 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            width: 100%; 
+            height: 65px; 
+            background: #ffffff; /* Fondo blanco */
+            border-top: 1px solid #eee;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1); 
+            position: sticky; 
+            bottom: 0;
+            z-index: 999;
+        }
+        .nav-item { 
+            display: flex; flex-direction: column; align-items: center; 
+            font-size: 14px; /* Era 12px */
+            color: #888; /* Iconos inactivos en gris */
+            cursor: pointer; text-decoration: none; 
+            flex: 1; 
+            padding: 5px 0;
+        } 
+        .nav-item.active { 
+            color: #2d7f8d; /* Icono activo en color de paleta */
+        } 
+        .nav-item .icon { font-size: 26px; margin-bottom: 2px; } /* Era 24px */
+        /* ================================= */
+
+        /* ESTILOS PARA LOS MODALES (ventanas emergentes) */
+        .modal-overlay {
+            display: none; 
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 85%;
+            max-width: 400px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 36px; /* Era 32px */
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            color: #236471; 
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        /* Estilos para la lista de servicios */
+        .service-list-item {
+            font-size: 20px; /* Era 18px */
+            padding: 15px 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .service-list-item.active-service {
+            font-weight: bold;
+            color: #2d7f8d; 
+        }
+        .service-list-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Estilo para el botón "Añadir servicio" */
+        .add-service-btn {
+            display: block;
+            width: 100%;
+            background-color: #e0f2f7; 
+            color: #2d7f8d; 
+            font-size: 20px; /* Era 18px */
+            font-weight: 600;
+            text-align: center;
+            padding: 15px 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            text-decoration: none;
+        }
+        
+        /* Estilos para el menú lateral */
+        .side-menu-link {
+            display: block;
+            font-size: 22px; /* Era 20px */
+            color: #333;
+            text-decoration: none;
+            padding: 15px 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .side-menu-link:last-child {
+            border-bottom: none;
+        }
+
+        /* Estilo para la imagen del recibo */
+        .receipt-image {
+            width: 100%; 
+            max-width: 700px; 
+            height: auto; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            margin: 15px auto; 
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="main-content">
+
+            <div id="page-saldo" class="app-page active-page">
+                
+                <header class="header">
+                    <h1>Saldo</h1>
+                    <div class="menu-icon" id="btn-menu"><span></span></div>
+                </header>
+                
+                <div class="service-selector" id="btn-service-selector">
+                    <div>
+                        <span>Alias - Número de servicio</span><br>
+                        <strong>571821200358</strong>
+                    </div>
+                    <div>▼</div>
+                </div>
+                
+                <div class="saldo-container">
+                    <section class="bill-details">
+                        <p><strong>Periodo:</strong> Septiembre - Noviembre 2025</p>
+                        <p><strong>Fecha límite de pago:</strong> 23/Noviembre/2025</p>
+                        <p><strong>Estatus:</strong> <span class="status-paid">Pagado</span></p>
+                    </section>
+                    <section class="saldo-section">
+                        <div class="label">Saldo actual:</div>
+                        <div class="amount">$0</div>
+                        <div class="consumption-info">
+                            475 kWh consumo <strong class="low">Bajo</strong>
+                        </div>
+                    </section>
+                    <div class="consumption-bar-container">
+                        <div class="consumption-bar"></div>
+                        <div class="consumption-marker"></div>
+                    </div>
+                </div>
+
+                <a href="#" class="pay-button" id="btn-pagar">Pagar</a>
+                <a href="#" class="simulate-link" id="btn-simular">
+                    <span class="icon">📊</span>
+                    Simula tu consumo
+                </a>
+            </div>
+
+            <div id="page-recibos" class="app-page">
+                <header class="header"><h1>Recibos</h1></header>
+                <a href="#" class="back-link" data-target="page-saldo">‹ Regresar a Saldo</a>
+                
+                <div>
+                    <p style="text-align: center; color: #555;">
+                        Aquí se muestra tu último recibo.
+                    </p>
+                    <img src="recibo.jpg" alt="Recibo de luz" class="receipt-image">
+                </div>
+            </div>
+            
+            <div id="page-reportes" class="app-page">
+                <header class="header"><h1>Reportes</h1></header>
+                <a href="#" class="back-link" data-target="page-saldo">‹ Regresar a Saldo</a>
+
+                <div class="placeholder-content">
+                    <span class="icon">💡</span>
+                    <h2>Aquí iría la sección de reportes</h2>
+                </div>
+            </div>
+
+            <div id="page-ubicanos" class="app-page">
+                <header class="header"><h1>Ubícanos</h1></header>
+                <a href="#" class="back-link" data-target="page-saldo">‹ Regresar a Saldo</a>
+
+                <div class="placeholder-content">
+                    <span class="icon">📍</span>
+                    <h2>Aquí iría un mapa</h2>
+                </div>
+            </div>
+            
+            <div id="page-pagar" class="app-page">
+                <header class="header"><h1>Pagar Recibo</h1></header>
+                <a href="#" class="back-link" id="back-to-saldo-from-pay">‹ Regresar a Saldo</a>
+                
+                <div class="placeholder-content">
+                    <span class="icon">💳</span>
+                    <h2>Opciones de Pago</h2>
+                    <p>Aquí se mostrarían las tarjetas guardadas, etc.</p>
+                </div>
+            </div>
+            
+            <div id="page-simular" class="app-page">
+                <header class="header"><h1>Simula tu Consumo</h1></header>
+                <a href="#" class="back-link" id="back-to-saldo-from-sim">‹ Regresar a Saldo</a>
+                
+                <div class="simulator-placeholder">
+                    <span class="icon">📈</span>
+                    <p>Aquí iría una gráfica y un control deslizante.</p>
+                    <div class="slider"></div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="footer-nav">
+            <a href="#" class="nav-item active" data-target="page-saldo">
+                <span class="icon">🏠</span> Saldo
+            </a>
+            <a href="#" class="nav-item" data-target="page-recibos">
+                <span class="icon">📄</span> Recibos
+            </a>
+            <a href="#" class="nav-item" data-target="page-reportes">
+                <span class="icon">💡</span> Reportes
+            </a>
+            <a href="#" class="nav-item" data-target="page-ubicanos">
+                <span class="icon">📍</span> Ubícanos
+            </a>
+        </nav>
+
+        <div class="modal-overlay" id="service-modal">
+            <div class="modal-content">
+                <span class="modal-close-btn" id="btn-close-service-modal">&times;</span>
+                <h2>Mis Servicios</h2>
+                <div class="service-list">
+                    <div class="service-list-item active-service">
+                        <strong>Alias:</strong> Casa<br>
+                        <strong>No. Servicio:</strong> 571821200358
+                    </div>
+                    <div class="service-list-item">
+                        <strong>Alias:</strong> Oficina<br>
+                        <strong>No. Servicio:</strong> 893456700123
+                    </div>
+                </div>
+                <a href="#" class="add-service-btn">✚ Añadir servicio</a>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="side-menu-modal">
+            <div class="modal-content">
+                <span class="modal-close-btn" id="btn-close-menu-modal">&times;</span>
+                <h2>Menú</h2>
+                <div class="side-menu-list">
+                    <a href="#" class="side-menu-link">Mi Perfil</a>
+                    <a href="#" class="side-menu-link">Notificaciones</a>
+                    <a href="#" class="side-menu-link">Ajustes</a>
+                    <a href="#" class="side-menu-link">Ayuda y Soporte</a>
+                    <a href="#" class="side-menu-link">Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const appPages = document.querySelectorAll('.app-page');
+            const pageSaldo = document.getElementById('page-saldo');
+            const pagePagar = document.getElementById('page-pagar');
+            const pageSimular = document.getElementById('page-simular');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            const btnPagar = document.getElementById('btn-pagar');
+            const btnSimular = document.getElementById('btn-simular');
+            
+            const btnBackFromPay = document.getElementById('back-to-saldo-from-pay');
+            const btnBackFromSim = document.getElementById('back-to-saldo-from-sim');
+
+            const backToSaldoLinks = document.querySelectorAll('.back-link[data-target="page-saldo"]');
+            
+            const btnMenu = document.getElementById('btn-menu');
+            const btnServiceSelector = document.getElementById('btn-service-selector');
+            const sideMenuModal = document.getElementById('side-menu-modal');
+            const serviceModal = document.getElementById('service-modal');
+            const btnCloseMenu = document.getElementById('btn-close-menu-modal');
+            const btnCloseService = document.getElementById('btn-close-service-modal');
+
+
+            function switchTab(targetId) {
+                const targetPage = document.getElementById(targetId);
+                
+                appPages.forEach(page => page.classList.remove('active-page'));
+                navItems.forEach(item => item.classList.remove('active'));
+
+                if (targetPage) {
+                    targetPage.classList.add('active-page');
+                }
+                
+                const targetNavItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+                if (targetNavItem) {
+                    targetNavItem.classList.add('active');
+                }
+            }
+
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.currentTarget.getAttribute('data-target');
+                    switchTab(targetId);
+                });
+            });
+
+            backToSaldoLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.currentTarget.getAttribute('data-target');
+                    switchTab(targetId);
+                });
+            });
+
+
+            function showInternalPage(pageToShow, pageToHide) {
+                pageToHide.classList.remove('active-page');
+                pageToShow.classList.add('active-page');
+            }
+            btnPagar.addEventListener('click', (e) => { e.preventDefault(); showInternalPage(pagePagar, pageSaldo); });
+            btnSimular.addEventListener('click', (e) => { e.preventDefault(); showInternalPage(pageSimular, pageSaldo); });
+            
+            btnBackFromPay.addEventListener('click', (e) => { e.preventDefault(); showInternalPage(pageSaldo, pagePagar); });
+            btnBackFromSim.addEventListener('click', (e) => { e.preventDefault(); showInternalPage(pageSaldo, pageSimular); });
+
+            
+            function showModal(modal) {
+                modal.style.display = 'flex';
+            }
+            function hideModal(modal) {
+                modal.style.display = 'none';
+            }
+
+            btnMenu.addEventListener('click', () => {
+                showModal(sideMenuModal);
+            });
+            btnCloseMenu.addEventListener('click', () => {
+                hideModal(sideMenuModal);
+            });
+
+            btnServiceSelector.addEventListener('click', () => {
+                showModal(serviceModal);
+            });
+            btnCloseService.addEventListener('click', () => {
+                hideModal(serviceModal);
+            });
+
+            sideMenuModal.addEventListener('click', (e) => {
+                if (e.target === sideMenuModal) { 
+                    hideModal(sideMenuModal);
+                }
+            });
+            serviceModal.addEventListener('click', (e) => {
+                if (e.target === serviceModal) { 
+                    hideModal(serviceModal);
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Espacio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .btn-personalizado {
+            background-color: #45a049;
+            color: white;
+        }
+        .btn-personalizado:hover {
+            background-color: #93BFC7; 
+            color: white;
+        }
+        .btn-regresar {
+            background-color: #93BFC7; 
+            color: white;
+        }
+        .btn-regresar:hover {
+            background-color: #45a049; 
+            color: white;
+        }
+        .subtitulo {
+            font-size: 1.5rem;
+            color: #343b34; 
+        }
+        .contenedor-personalizado {
+            max-width:  450px;
+            margin: 0 auto;
+            background-color: #f8f9fab5;
+        }
+        body {
+        background: linear-gradient(135deg, #93BFC7, #ABE7B2);
+        height: 100vh;
+        }
+    </style>
+    <link rel="icon" type="image/png" href="CFE.ico">
+</head>
+<body>
+<form>
+    <div class="container mt-5">
+        <div class="contenedor-personalizado border rounded p-4 shadow">
+            <h1 class="text-center">
+            <img src="CFE.png" alt="CFE Logo" width="250" height="150">
+        </h1>
+        <h2 class="subtitulo">
+            <i class="bi bi-lock-fill me-2"></i>Usuarios registrados
+        </h2>
+<div class="mb-3">
+    <label for="exampleInputEmail1" class="form-label fw-semibold text-dark">USUARIO:</label>
+    <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
+</div>
+<div class="mb-3">
+    <label for="exampleInputPassword1" class="form-label fw-semibold text-dark">CONTRASEÑA:</label>
+    <input type="password" class="form-control" id="exampleInputPassword1">
+</div>
+<button type="submit" class="btn btn-personalizado">INGRESAR</button>
+<button type="submit" class="btn btn-link">¿Olvidaste tu contraseña?</button>
+<br><br>
+<h3>¿No tienes una cuenta?</h3>
+<button type="submit" class="btn btn-personalizado">Regístrate</button>
+<br><br>
+<button type="submit" class="btn btn-regresar d-block mx-auto">REGRESAR</button>
+</form>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+</html>
